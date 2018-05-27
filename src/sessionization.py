@@ -9,6 +9,9 @@ from argparse import ArgumentParser
 def get_time_before(current,sec):
     '''
     get the date and time before some seconds
+    @parameters: 
+    current: Format('%Y-%m-%d %H:%M:%S', string)
+    sec: Format('$S', integer)
     '''
     return (datetime.strptime(str(current), '%Y-%m-%d %H:%M:%S') - timedelta(seconds = sec)).strftime('%Y-%m-%d %H:%M:%S')
 
@@ -51,17 +54,20 @@ def process(log_file,inactivity_file,output_file):
             timeflow = False
        
         date_time = date + ' ' + time
+        # create the dataframe table        
         table = table.append({'ip':ip,'date_time':date_time}, ignore_index=True)
     
         current = timelist[-1]
-    
+        # when now is the end
         if line_count == total_lines:
-            for ipid in list(OrderedDict.fromkeys(iplist)):
+            #  make sure the iplist is the same order with input file during the processing
+            for ipid in list(OrderedDict.fromkeys(iplist)): 
                 time_range = list(table[table['ip'] == ipid]['date_time'])
 
                 if len(time_range) > 0:
-                
+                    # count of requests
                     count =  len(table[table['ip'] == ipid])
+                    # time blocks
                     time_length = time_substraction(time_range[-1],time_range[0]) + 1
                     # print (ipid + ',' + time_range[0] + ','  + time_range[-1] + ',' + str(time_length) + ',' + str(count))
                     f.write(ipid + ',' + time_range[0] + ','  + time_range[-1] + ',' + str(time_length) + ',' + str(count) + '\n')
@@ -70,7 +76,7 @@ def process(log_file,inactivity_file,output_file):
         else:
             if timeflow:
                 for ipid in iplist:
-#         means currently at this time there is no request, some ip may finish requesting
+                    # means currently at this time there is no request, some ip may finish requesting
                     time_range = list(table[table['ip'] == ipid]['date_time'])
         
                     if len(table[(table['date_time'] == current) & (table['ip'] == ipid)]) == 0:
@@ -78,7 +84,7 @@ def process(log_file,inactivity_file,output_file):
                         starttime = get_time_before(date_time,inactivity_period + 1)
                         if len(time_range) > 0 and time_substraction(starttime, time_range[-1]) >= 0:
                             current_table = table[(table['date_time'] == starttime) & (table['ip'] == ipid)]
-                            count = len(current_table)
+                            count = len(current_table) 
                             index = list(current_table.index)
                         
                             time_length = time_substraction(time_range[-1],time_range[0]) + 1
@@ -98,7 +104,7 @@ def process(log_file,inactivity_file,output_file):
 
 
 if __name__ == '__main__':
-    # process('./input/log.csv','./input/inactivity_period.txt','./output/sessionization.txt')
+   
     parser = ArgumentParser()
     parser.add_argument('log', help='Name of input log file in CSV format')
     parser.add_argument('inactivity_period_file',
